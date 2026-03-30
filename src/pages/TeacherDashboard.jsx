@@ -9,6 +9,7 @@ import { normalizeChoices, validateQuestion } from '../features/quiz/quizUtils.j
 import { QUESTION_STATE } from '../utils/constants.js';
 import { Button } from '../components/Button.jsx';
 import { Input } from '../components/Input.jsx';
+import { Textarea } from '../components/Textarea.jsx';
 import { Layout } from '../components/Layout.jsx';
 import { Leaderboard } from '../components/Leaderboard.jsx';
 import { Timer } from '../components/Timer.jsx';
@@ -192,12 +193,14 @@ export function TeacherDashboard() {
         <div className="qp-stack">
           <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Compose question</h2>
           <form className="qp-card qp-stack" style={{ padding: '1.25rem' }} onSubmit={addQ}>
-            <Input
+            <Textarea
               label="Prompt"
               name="prompt"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="What does this code output?"
+              placeholder="Enter your question. Use multiple lines for code snippets."
+              rows={10}
+              monospace
             />
             {choices.map((c, i) => (
               <Input
@@ -235,8 +238,8 @@ export function TeacherDashboard() {
           <ul className="qp-stack" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
             {questions.map((q) => (
               <li key={q.id} className="qp-card" style={{ padding: '1rem' }}>
-                <div className="qp-row" style={{ justifyContent: 'space-between' }}>
-                  <strong style={{ flex: 1 }}>{q.prompt}</strong>
+                <div className="qp-row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <span className="qp-queue-prompt">{q.prompt}</span>
                   <span className="qp-muted" style={{ fontSize: '0.85rem' }}>
                     {q.state}
                   </span>

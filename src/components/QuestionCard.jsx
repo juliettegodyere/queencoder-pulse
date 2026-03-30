@@ -11,7 +11,7 @@ export function QuestionCard({
 }) {
   return (
     <div className="qp-question qp-card">
-      <h2 className="qp-question__prompt">{prompt}</h2>
+      <div className="qp-question__prompt qp-question__prompt--multiline">{prompt}</div>
       <ul className="qp-question__choices">
         {choices.map((text, i) => {
           let state = '';

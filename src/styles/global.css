@@ -208,6 +208,32 @@ button {
   box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
 }
 
+.qp-textarea {
+  width: 100%;
+  min-height: 8rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--qp-radius-sm);
+  border: 1px solid var(--qp-border);
+  background: var(--qp-bg);
+  color: var(--qp-text);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.qp-textarea--code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.875rem;
+  tab-size: 2;
+}
+
+.qp-textarea:focus {
+  outline: none;
+  border-color: var(--qp-accent);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
+}
+
 .qp-input--error {
   border-color: var(--qp-danger);
 }
@@ -237,6 +263,24 @@ button {
   margin: 0 0 1.25rem;
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+.qp-question__prompt--multiline {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.qp-queue-prompt {
+  flex: 1;
+  font-weight: 600;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 8rem;
+  overflow: auto;
+  font-size: 0.9rem;
+  font-family: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
 }
 
 .qp-question__choices {

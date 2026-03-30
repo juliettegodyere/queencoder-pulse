@@ -73,7 +73,7 @@ This app is a **Vite** single-page app. Vercel serves the `dist` output; `vercel
    - `VITE_FIREBASE_MESSAGING_SENDER_ID`
    - `VITE_FIREBASE_APP_ID`
 6. Click **Deploy**. After the first deploy, open the production URL Vercel assigns (e.g. `https://your-app.vercel.app`).
-7. In **Firebase Console → Authentication → Settings → Authorized domains**, add your Vercel hostname (e.g. `your-app.vercel.app`) so Google sign-in and auth work on production.
+7. **Required for Auth:** In **Firebase Console → Authentication → Settings → Authorized domains**, click **Add domain** and add **only the host** (no `https://`), e.g. `your-app.vercel.app`. Add **preview** hostnames too if you use Vercel preview URLs (`*.vercel.app` subdomains each need to be listed, or use your production URL only). Without this step, Google sign-in and anonymous auth fail with **`auth/unauthorized-domain`** on the deployed site.
 8. Redeploy if you change env vars (Vercel → Project → Settings → Environment Variables → redeploy).
 
 ### Option B — Vercel CLI
@@ -87,6 +87,7 @@ This app is a **Vite** single-page app. Vercel serves the `dist` output; `vercel
 
 - Do **not** commit `.env`; store secrets only in Vercel (or your CI) environment variables.
 - If routes return 404 on refresh, ensure `vercel.json` is present and redeploy.
+- **`auth/unauthorized-domain` after deploy:** Add your exact Vercel domain under Firebase **Authentication → Settings → Authorized domains** (see step 7 above).
 
 ## Project Structure
 queencoder-pulse/
