@@ -1,0 +1,17 @@
+:root {
+  --qp-bg: #0f1117;
+  --qp-surface: #181b26;
+  --qp-surface-2: #222636;
+  --qp-border: #2d3348;
+  --qp-text: #f1f5f9;
+  --qp-muted: #94a3b8;
+  --qp-accent: #818cf8;
+  --qp-accent-dim: #6366f1;
+  --qp-success: #34d399;
+  --qp-warning: #fbbf24;
+  --qp-danger: #f87171;
+  --qp-radius: 12px;
+  --qp-radius-sm: 8px;
+  --qp-font: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --qp-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}

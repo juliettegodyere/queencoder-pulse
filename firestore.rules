@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      // Support either { role: "admin" } or { admin: true } custom claim.
+      return isSignedIn() && (request.auth.token.role == 'admin' || request.auth.token.admin == true);
+    }
+
+    function isGoogleAuth() {
+      return isSignedIn() && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+
+    function isTeacherForSession(sessionId) {
+      return isAdmin() ||
+        (isGoogleAuth() &&
+          request.auth.uid ==
+            get(/databases/$(database)/documents/sessions/$(sessionId)).data.teacherUid);
+    }
+
+    // Students claim "first correct" by updating only this field on the question doc (see submitAnswer transaction).
+    function isStudentFirstCorrectClaim() {
+      return isSignedIn() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['firstCorrectAwardedTo']) &&
+        request.resource.data.firstCorrectAwardedTo == request.auth.uid &&
+        (!resource.data.keys().hasAny(['firstCorrectAwardedTo']) || resource.data.firstCorrectAwardedTo == null);
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if isSignedIn();
+
+      // Only Google-auth teachers can create new sessions.
+      allow create: if isGoogleAuth() && request.resource.data.teacherUid == request.auth.uid;
+
+      allow update, delete: if isTeacherForSession(sessionId);
+
+      match /questions/{questionId} {
+        allow read: if isSignedIn();
+        allow create, delete: if isTeacherForSession(sessionId);
+        allow update: if isTeacherForSession(sessionId) || isStudentFirstCorrectClaim();
+      }
+
+      match /players/{playerId} {
+        allow read: if isSignedIn();
+        allow create, update, delete: if isSignedIn() && playerId == request.auth.uid;
+      }
+
+      match /responses/{responseId} {
+        allow read: if isSignedIn();
+        // Students can only write their own responses.
+        allow create, update, delete: if isSignedIn() && request.resource.data.playerId == request.auth.uid;
+      }
+    }
+  }
+}
