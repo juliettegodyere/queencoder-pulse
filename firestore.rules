@@ -22,19 +22,16 @@ service cloud.firestore {
             get(/databases/$(database)/documents/sessions/$(sessionId)).data.teacherUid);
     }
 
-    // A signed-in user is linked to a student document if their uid appears in its uids array
-    // or matches primaryUid.
     function isLinkedStudent(studentId) {
-      if (!isSignedIn()) {
-        return false;
-      }
-      let snap = get(/databases/$(database)/documents/students/$(studentId));
-      if (!snap.exists()) {
-        return false;
-      }
-      let data = snap.data;
-      return data.primaryUid == request.auth.uid ||
-        (data.uids != null && request.auth.uid in data.uids);
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/students/$(studentId)) &&
+        (
+          get(/databases/$(database)/documents/students/$(studentId)).data.primaryUid == request.auth.uid ||
+          (
+            get(/databases/$(database)/documents/students/$(studentId)).data.uids != null &&
+            request.auth.uid in get(/databases/$(database)/documents/students/$(studentId)).data.uids
+          )
+        );
     }
 
     // Students claim "first correct" by updating only this field on the question doc (see submitAnswer transaction).
@@ -46,13 +43,11 @@ service cloud.firestore {
     }
 
     match /students/{studentId} {
-      // Anyone signed in can read public profile fields for leaderboards.
       allow read: if isSignedIn();
-
-      // Admins/teachers can create and update any student profile.
-      allow create, update, delete: if isAdmin() || isGoogleAuth() ||
-        // A linked student can update their own profile and stats.
-        isLinkedStudent(studentId);
+      // Any signed-in user can create or update a student profile for now
+      // so that existing IDs can be reused across devices.
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin() || isGoogleAuth();
     }
 
     match /sessions/{sessionId} {

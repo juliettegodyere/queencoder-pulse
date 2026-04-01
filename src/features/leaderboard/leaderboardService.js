@@ -116,10 +116,12 @@ export async function submitAnswer({
       const studentSnap = await tx.get(studentRef);
       studentPrev = studentSnap.exists()
         ? studentSnap.data()
-        : { totalScore: 0, sessionsPlayed: 0, medalThresholds: [], medalCount: 0 };
+        : { totalScore: 0, sessionsPlayed: 0, medalThresholds: [], medalCount: 0, totalResponseTimeSeconds: 0 };
 
       prevStudentScore = studentPrev.totalScore || 0;
       newStudentScore = prevStudentScore + points;
+      const prevStudentTime = studentPrev.totalResponseTimeSeconds || 0;
+      const newStudentTime = prevStudentTime + responseTimeSeconds;
 
       const thresholds = [1000, 5000, 10000];
       const existingThresholds = new Set(studentPrev.medalThresholds || []);
@@ -171,6 +173,7 @@ export async function submitAnswer({
           sessionsPlayed: (studentPrev.sessionsPlayed || 0) + (incSessionsPlayed ? 1 : 0),
           medalThresholds: updatedThresholds,
           medalCount: (studentPrev.medalCount || 0) + newlyAwardedCount,
+          totalResponseTimeSeconds: newStudentTime,
         },
         { merge: true }
       );

@@ -35,6 +35,7 @@ export function GlobalLeaderboard() {
         id: s.studentId || s.id,
         displayName: s.displayName || s.studentId || 'Student',
         totalScore: s.totalScore || 0,
+        totalResponseTimeSeconds: s.totalResponseTimeSeconds ?? null,
         rank: index + 1,
       })),
     [students]
