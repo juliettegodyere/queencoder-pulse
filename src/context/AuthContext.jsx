@@ -6,6 +6,7 @@ const AuthContext = createContext(null);
 
 const STORAGE_DISPLAY_NAME = 'qp_display_name';
 const STORAGE_ACTIVE_SESSION_ID = 'qp_session_id';
+const STORAGE_STUDENT_ID = 'qp_student_id';
 
 export function AuthProvider({ children }) {
   const [authUser, setAuthUser] = useState(null);
@@ -17,6 +18,9 @@ export function AuthProvider({ children }) {
   );
   const [activeSessionId, setActiveSessionId] = useState(
     () => localStorage.getItem(STORAGE_ACTIVE_SESSION_ID) || null
+  );
+  const [studentId, setStudentId] = useState(
+    () => localStorage.getItem(STORAGE_STUDENT_ID) || ''
   );
 
   useEffect(() => {
@@ -64,12 +68,17 @@ export function AuthProvider({ children }) {
     return result.user.uid;
   }, [refreshAdminFlag]);
 
-  const setStudentProfile = useCallback((sessionId, name) => {
+  const setStudentProfile = useCallback((sessionId, name, sid) => {
     const trimmed = String(name || '').trim();
     setDisplayName(trimmed);
     setActiveSessionId(sessionId);
     if (trimmed) localStorage.setItem(STORAGE_DISPLAY_NAME, trimmed);
     localStorage.setItem(STORAGE_ACTIVE_SESSION_ID, sessionId);
+    if (sid) {
+      const normalized = String(sid || '').trim();
+      setStudentId(normalized);
+      if (normalized) localStorage.setItem(STORAGE_STUDENT_ID, normalized);
+    }
   }, []);
 
   const clearStudentSession = useCallback(() => {
@@ -85,6 +94,7 @@ export function AuthProvider({ children }) {
       displayName,
       setDisplayName,
       activeSessionId,
+      studentId,
       isAdmin,
       signInWithGoogle,
       setStudentProfile,
@@ -95,6 +105,7 @@ export function AuthProvider({ children }) {
       authLoading,
       displayName,
       activeSessionId,
+      studentId,
       isAdmin,
       signInWithGoogle,
       setStudentProfile,

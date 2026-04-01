@@ -10,6 +10,7 @@ import { Layout } from '../components/Layout.jsx';
 import { Leaderboard } from '../components/Leaderboard.jsx';
 import { QuestionCard } from '../components/QuestionCard.jsx';
 import { Timer } from '../components/Timer.jsx';
+import { formatSeconds } from '../utils/time.js';
 import { useActiveQuestion } from '../hooks/useQuestions.js';
 import { useLeaderboard } from '../hooks/useLeaderboard.js';
 import { useSession } from '../hooks/useSession.js';
@@ -28,6 +29,7 @@ export function QuizSession() {
   const [feedback, setFeedback] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [responseCount, setResponseCount] = useState(0);
+  const [elapsedOnSubmit, setElapsedOnSubmit] = useState(null);
 
   useEffect(() => {
     if (!sessionId || !activeSessionId || activeSessionId !== sessionId) {
@@ -39,6 +41,7 @@ export function QuizSession() {
     setSelected(null);
     setSubmitted(false);
     setFeedback(null);
+    setElapsedOnSubmit(null);
   }, [qid]);
 
   useEffect(() => {
@@ -60,9 +63,18 @@ export function QuizSession() {
     navigate(`/play/${sessionId}/results`, { replace: true });
   }, [session, sessionId, navigate]);
 
-  const onSubmit = async () => {
-    if (selected == null || !qid || submitted) return;
+  const onSubmit = async (choiceIndexOverride) => {
+    const choiceIndex = choiceIndexOverride ?? selected;
+    if (choiceIndex == null || !qid || submitted) return;
     if (!playerId || authLoading) return;
+
+     // Freeze local \"time on question\" when the student submits.
+    if (session?.currentQuestionStartedAt?.toMillis) {
+      const startedMs = session.currentQuestionStartedAt.toMillis();
+      const nowMs = Date.now();
+      setElapsedOnSubmit((nowMs - startedMs) / 1000);
+    }
+
     setSubmitting(true);
     setFeedback(null);
     try {
@@ -70,7 +82,7 @@ export function QuizSession() {
         sessionId,
         questionId: qid,
         playerId,
-        choiceIndex: selected,
+        choiceIndex,
       });
       setSubmitted(true);
       setLastResult(result);
@@ -133,30 +145,45 @@ export function QuizSession() {
                 Waiting for the teacher to send a question…
               </p>
               <p style={{ margin: 0 }} className="qp-row">
-                <span className="qp-muted">Timer:</span> <Timer startedAt={session.currentQuestionStartedAt} />
+                <span className="qp-muted">Timer:</span>{' '}
+                {elapsedOnSubmit != null ? (
+                  <span className="qp-timer">{formatSeconds(elapsedOnSubmit)}</span>
+                ) : (
+                  <Timer startedAt={session.currentQuestionStartedAt} />
+                )}
               </p>
             </div>
           ) : (
             <>
               <p className="qp-row" style={{ margin: 0 }}>
                 <span className="qp-muted">Time on question:</span>{' '}
-                <Timer startedAt={session.currentQuestionStartedAt} />
+                {elapsedOnSubmit != null ? (
+                  <span className="qp-timer">{formatSeconds(elapsedOnSubmit)}</span>
+                ) : (
+                  <Timer startedAt={session.currentQuestionStartedAt} />
+                )}
               </p>
               <QuestionCard
                 prompt={question.prompt}
                 choices={question.choices}
                 selectedIndex={selected}
-                onSelect={submitted ? undefined : setSelected}
+                onSelect={
+                  submitted || submitting
+                    ? undefined
+                    : async (index) => {
+                        setSelected(index);
+                        await onSubmit(index);
+                      }
+                }
                 disabled={submitted}
                 showCorrect={submitted}
                 correctIndex={question.correctIndex}
               />
               <Button
                 type="button"
-                onClick={onSubmit}
-                disabled={selected == null || submitted || submitting}
+                disabled
               >
-                {submitted ? 'Answer locked in' : submitting ? 'Submitting…' : 'Submit answer'}
+                {submitted ? 'Answer locked in' : submitting ? 'Submitting…' : 'Select an option'}
               </Button>
             </>
           )}

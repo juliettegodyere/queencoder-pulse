@@ -111,6 +111,58 @@ button {
   letter-spacing: -0.02em;
 }
 
+.qp-header__right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.qp-profile-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: radial-gradient(circle at 0% 0%, rgba(129, 140, 248, 0.18), transparent 55%),
+    rgba(15, 23, 42, 0.85);
+  color: var(--qp-text);
+  text-decoration: none;
+  font-size: 0.8rem;
+}
+
+.qp-profile-pill:hover {
+  border-color: var(--qp-accent);
+  text-decoration: none;
+}
+
+.qp-profile-pill__avatar {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--qp-accent), var(--qp-accent-dim));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.qp-profile-pill__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.qp-profile-pill__name {
+  font-weight: 600;
+}
+
+.qp-profile-pill__id {
+  font-size: 0.7rem;
+  color: var(--qp-muted);
+}
+
 .qp-main {
   flex: 1;
   width: 100%;
@@ -491,4 +543,25 @@ button {
 .qp-previous__sub {
   font-size: 0.8rem;
   margin-top: 0.35rem;
+}
+
+.qp-profile-stat {
+  display: flex;
+  flex-direction: column;
+  min-width: 5rem;
+}
+
+.qp-profile-stat-label {
+  font-size: 0.75rem;
+  color: var(--qp-muted);
+}
+
+.qp-profile-stat-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.qp-profile-medal-chip {
+  font-size: 0.8rem;
+  color: var(--qp-muted);
 }

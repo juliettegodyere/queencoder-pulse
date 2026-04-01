@@ -4,7 +4,9 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
   onSnapshot,
+  orderBy,
   query,
   serverTimestamp,
   updateDoc,
@@ -76,11 +78,55 @@ export async function verifyTeacherToken(sessionId, teacherToken) {
 }
 
 export async function endSession(sessionId) {
-  await updateDoc(doc(db, 'sessions', sessionId), {
+  const sessionRef = doc(db, 'sessions', sessionId);
+  await updateDoc(sessionRef, {
     status: SESSION_STATUS.ENDED,
     currentQuestionId: null,
     currentQuestionStartedAt: null,
   });
+
+  // Award per-session medals (gold/silver/bronze) based on final scores.
+  const playersRef = collection(db, 'sessions', sessionId, 'players');
+  const topSnap = await getDocs(
+    query(
+      playersRef,
+      orderBy('totalScore', 'desc'),
+      orderBy('totalResponseTimeSeconds', 'asc'),
+      limit(3)
+    )
+  );
+
+  const medals = ['gold', 'silver', 'bronze'];
+  const updates = topSnap.docs.map(async (docSnap, index) => {
+    const data = docSnap.data();
+    const studentId = data.studentId;
+    if (!studentId) return;
+    const medalType = medals[index] || 'participant';
+    const studentRef = doc(db, 'students', String(studentId));
+    const studentSnap = await getDoc(studentRef);
+    const studentPrev = studentSnap.exists()
+      ? studentSnap.data()
+      : { sessionMedals: [], medalCount: 0 };
+
+    const newMedal = {
+      type: medalType,
+      sessionId,
+      position: index + 1,
+      // Use client timestamp; serverTimestamp is not allowed inside arrays.
+      awardedAt: Date.now(),
+    };
+
+    const existingMedals = Array.isArray(studentPrev.sessionMedals)
+      ? studentPrev.sessionMedals
+      : [];
+
+    await updateDoc(studentRef, {
+      sessionMedals: [...existingMedals, newMedal],
+      medalCount: (studentPrev.medalCount || 0) + 1,
+    });
+  });
+
+  await Promise.all(updates);
 }
 
 export async function publishQuestionToSession(sessionId, questionId) {

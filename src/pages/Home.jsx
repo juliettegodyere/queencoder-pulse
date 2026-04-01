@@ -100,6 +100,10 @@ export function Home() {
               <strong style={{ color: 'var(--qp-text)' }}>Scoring:</strong> +10 correct · +5 first
               correct · +3 if under 5 seconds.
             </p>
+            <p style={{ margin: 0, fontSize: '0.85rem' }}>
+              When scores are tied, rankings and medals are decided by{' '}
+              <strong>total answer time</strong> — faster students place higher.
+            </p>
           </section>
         </>
       )}

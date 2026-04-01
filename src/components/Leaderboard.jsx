@@ -13,7 +13,11 @@ export function Leaderboard({ ranked = [], highlightPlayerId, title = 'Live lead
             >
               <span className="qp-leaderboard__rank">{p.rank}</span>
               <span className="qp-leaderboard__name">{p.displayName || 'Player'}</span>
-              <span className="qp-leaderboard__score">{p.totalScore ?? 0} pts</span>
+              <span className="qp-leaderboard__score">
+                {p.totalScore ?? 0} pts
+                {p.totalResponseTimeSeconds != null &&
+                  ` · ${Math.round(p.totalResponseTimeSeconds)}s`}
+              </span>
             </li>
           ))}
         </ol>

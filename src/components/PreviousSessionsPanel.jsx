@@ -66,7 +66,8 @@ export function PreviousSessionsPanel() {
 
   const openStudentSession = (entry) => {
     const name = entry.lastDisplayName || 'Student';
-    setStudentProfile(entry.sessionId, name);
+    // We don't persist studentId in local history yet; pass undefined for now.
+    setStudentProfile(entry.sessionId, name, undefined);
     const ended = entry.status === SESSION_STATUS.ENDED;
     navigate(ended ? `/play/${entry.sessionId}/results` : `/play/${entry.sessionId}`);
   };

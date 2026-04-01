@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { findSessionByJoinCode } from '../features/session/sessionService.js';
 import { joinSessionAsPlayer } from '../features/leaderboard/leaderboardService.js';
+import { linkAuthUserToStudent, normalizeStudentId } from '../features/students/studentService.js';
 import { Button } from '../components/Button.jsx';
 import { Input } from '../components/Input.jsx';
 import { Layout } from '../components/Layout.jsx';
@@ -16,9 +17,10 @@ import {
 export function StudentJoin() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { playerId, setStudentProfile, authLoading } = useAuth();
+  const { playerId, setStudentProfile, authLoading, studentId: storedStudentId } = useAuth();
   const [code, setCode] = useState(() => searchParams.get('code')?.toUpperCase() || '');
   const [name, setName] = useState('');
+  const [studentId, setStudentId] = useState(() => storedStudentId || '');
   const nameSuggestions = useMemo(() => getDisplayNameSuggestions(), []);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -28,6 +30,11 @@ export function StudentJoin() {
     setErr(null);
     setBusy(true);
     try {
+      const normalizedId = normalizeStudentId(studentId);
+      if (!normalizedId) {
+        setErr('Enter your student ID.');
+        return;
+      }
       const session = await findSessionByJoinCode(code);
       if (!session) {
         setErr('No session found for that code.');
@@ -38,7 +45,14 @@ export function StudentJoin() {
         return;
       }
       const displayName = name.trim() || 'Student';
-      await joinSessionAsPlayer(session.id, playerId, displayName);
+      // Link auth user to a persistent student profile.
+      await linkAuthUserToStudent({
+        studentId: normalizedId,
+        uid: playerId,
+        displayName,
+      });
+
+      await joinSessionAsPlayer(session.id, playerId, displayName, normalizedId);
       rememberDisplayName(displayName);
       recordStudentSessionEntry({
         sessionId: session.id,
@@ -47,7 +61,7 @@ export function StudentJoin() {
         displayName,
         status: session.status,
       });
-      setStudentProfile(session.id, displayName);
+      setStudentProfile(session.id, displayName, normalizedId);
       navigate(`/play/${session.id}`);
     } catch (e2) {
       setErr(e2?.message || 'Could not join.');
@@ -83,6 +97,15 @@ export function StudentJoin() {
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
           placeholder="e.g. ABC12X"
+          autoComplete="off"
+          required
+        />
+        <Input
+          label="Student ID"
+          name="studentId"
+          value={studentId}
+          onChange={(e) => setStudentId(e.target.value)}
+          placeholder="e.g. 24-CS-005"
           autoComplete="off"
           required
         />

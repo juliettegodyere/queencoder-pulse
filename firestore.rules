@@ -22,12 +22,37 @@ service cloud.firestore {
             get(/databases/$(database)/documents/sessions/$(sessionId)).data.teacherUid);
     }
 
+    // A signed-in user is linked to a student document if their uid appears in its uids array
+    // or matches primaryUid.
+    function isLinkedStudent(studentId) {
+      if (!isSignedIn()) {
+        return false;
+      }
+      let snap = get(/databases/$(database)/documents/students/$(studentId));
+      if (!snap.exists()) {
+        return false;
+      }
+      let data = snap.data;
+      return data.primaryUid == request.auth.uid ||
+        (data.uids != null && request.auth.uid in data.uids);
+    }
+
     // Students claim "first correct" by updating only this field on the question doc (see submitAnswer transaction).
     function isStudentFirstCorrectClaim() {
       return isSignedIn() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['firstCorrectAwardedTo']) &&
         request.resource.data.firstCorrectAwardedTo == request.auth.uid &&
         (!resource.data.keys().hasAny(['firstCorrectAwardedTo']) || resource.data.firstCorrectAwardedTo == null);
+    }
+
+    match /students/{studentId} {
+      // Anyone signed in can read public profile fields for leaderboards.
+      allow read: if isSignedIn();
+
+      // Admins/teachers can create and update any student profile.
+      allow create, update, delete: if isAdmin() || isGoogleAuth() ||
+        // A linked student can update their own profile and stats.
+        isLinkedStudent(studentId);
     }
 
     match /sessions/{sessionId} {
