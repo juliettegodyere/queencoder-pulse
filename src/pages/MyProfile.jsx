@@ -7,7 +7,7 @@ import { Layout } from '../components/Layout.jsx';
 
 export function MyProfile() {
   const navigate = useNavigate();
-  const { studentId, displayName, authLoading } = useAuth();
+  const { studentId, displayName, authLoading, logoutEverywhere } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
@@ -91,6 +91,16 @@ export function MyProfile() {
             onClick={() => navigate('/leaderboard/global')}
           >
             Global leaderboard
+          </button>
+          <button
+            type="button"
+            className="qp-btn qp-btn--ghost"
+            onClick={async () => {
+              await logoutEverywhere();
+              navigate('/', { replace: true });
+            }}
+          >
+            Log out on this device
           </button>
         </div>
       }

@@ -6,6 +6,7 @@ import { StudentJoin } from '../pages/StudentJoin.jsx';
 import { TeacherDashboard } from '../pages/TeacherDashboard.jsx';
 import { MyProfile } from '../pages/MyProfile.jsx';
 import { GlobalLeaderboard } from '../pages/GlobalLeaderboard.jsx';
+import { TeacherProfile } from '../pages/TeacherProfile.jsx';
 
 export function AppRoutes() {
   return (
@@ -13,6 +14,7 @@ export function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/join" element={<StudentJoin />} />
       <Route path="/teacher/:sessionId" element={<TeacherDashboard />} />
+      <Route path="/teacher/profile" element={<TeacherProfile />} />
       <Route path="/play/:sessionId" element={<QuizSession />} />
       <Route path="/play/:sessionId/results" element={<Results />} />
       <Route path="/me" element={<MyProfile />} />

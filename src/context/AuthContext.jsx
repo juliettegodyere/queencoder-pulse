@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useEffect, useState } from 'react';
-import { GoogleAuthProvider, getIdTokenResult, onAuthStateChanged, signInAnonymously, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, getIdTokenResult, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut } from 'firebase/auth';
 import { auth } from '../services/firebase.js';
 
 const AuthContext = createContext(null);
@@ -86,11 +86,29 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(STORAGE_ACTIVE_SESSION_ID);
   }, []);
 
+  const logoutEverywhere = useCallback(async () => {
+    try {
+      await signOut(auth);
+    } catch {
+      // ignore sign-out errors; we still clear local state
+    } finally {
+      setAuthUser(null);
+      setIsAdmin(false);
+      setDisplayName('');
+      setActiveSessionId(null);
+      setStudentId('');
+      localStorage.removeItem(STORAGE_DISPLAY_NAME);
+      localStorage.removeItem(STORAGE_ACTIVE_SESSION_ID);
+      localStorage.removeItem(STORAGE_STUDENT_ID);
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       authUser,
       authLoading,
       playerId: authUser?.uid || null,
+      isTeacher: !!authUser && !authUser.isAnonymous,
       displayName,
       setDisplayName,
       activeSessionId,
@@ -99,6 +117,7 @@ export function AuthProvider({ children }) {
       signInWithGoogle,
       setStudentProfile,
       clearStudentSession,
+      logoutEverywhere,
     }),
     [
       authUser,
@@ -110,6 +129,7 @@ export function AuthProvider({ children }) {
       signInWithGoogle,
       setStudentProfile,
       clearStudentSession,
+      logoutEverywhere,
     ]
   );
 
