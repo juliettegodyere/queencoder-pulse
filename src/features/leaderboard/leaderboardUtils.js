@@ -1,5 +1,9 @@
 export function sortLeaderboard(players) {
   return [...players].sort((a, b) => {
+    const aActive = a.active !== false;
+    const bActive = b.active !== false;
+    if (aActive !== bActive) return aActive ? -1 : 1;
+
     if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
 
     // Tie-breaker 1: more correct answers

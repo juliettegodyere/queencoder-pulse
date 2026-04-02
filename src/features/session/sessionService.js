@@ -4,9 +4,7 @@ import {
   doc,
   getDoc,
   getDocs,
-  limit,
   onSnapshot,
-  orderBy,
   query,
   serverTimestamp,
   updateDoc,
@@ -14,6 +12,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '../../services/firebase.js';
+import { sortLeaderboard } from '../leaderboard/leaderboardUtils.js';
 import { QUESTION_STATE, SESSION_STATUS } from '../../utils/constants.js';
 import { generateJoinCode, randomToken } from './sessionUtils.js';
 
@@ -86,19 +85,16 @@ export async function endSession(sessionId) {
   });
 
   // Award per-session medals (gold/silver/bronze) based on final scores.
+  // Only count players still active in the session (exclude logged-out rows).
   const playersRef = collection(db, 'sessions', sessionId, 'players');
-  const topSnap = await getDocs(
-    query(
-      playersRef,
-      orderBy('totalScore', 'desc'),
-      orderBy('totalResponseTimeSeconds', 'asc'),
-      limit(3)
-    )
-  );
+  const playersSnap = await getDocs(playersRef);
+  const allPlayers = playersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const activeOnly = allPlayers.filter((p) => p.active !== false);
+  const sorted = sortLeaderboard(activeOnly);
+  const topThree = sorted.slice(0, 3);
 
   const medals = ['gold', 'silver', 'bronze'];
-  const updates = topSnap.docs.map(async (docSnap, index) => {
-    const data = docSnap.data();
+  const updates = topThree.map(async (data, index) => {
     const studentId = data.studentId;
     if (!studentId) return;
     const medalType = medals[index] || 'participant';

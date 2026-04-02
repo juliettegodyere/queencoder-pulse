@@ -15,6 +15,10 @@ This document explains what Queencoder Pulse does, its key features, and how to 
 
 ## Core Features
 
+- **Session presence**
+  - When a student uses **Log out on this device** while a session is still running, their row is marked **inactive** on the leaderboard (dimmed styling) and sorted below active players.
+  - Rejoining the same session with the same **student ID** removes the duplicate leaderboard row (only the latest connection stays). Firebase may still list old anonymous auth users until you clean them up in the console; that does not affect scores.
+
 - **Live sessions**
   - Teachers create sessions and share a **Join code**.
   - Students join from any device using the Join code.
@@ -51,7 +55,7 @@ This document explains what Queencoder Pulse does, its key features, and how to 
 2. Go to **Join**.
 3. Enter:
    - **Join code** (from your teacher)
-   - **Student ID** (your school/student identifier)
+   - **Student ID** (your school/student identifier). A leading `@` is ignored so `@test` and `test` are treated as the same ID.
    - **Display name**
 4. Join the session.
 
@@ -140,8 +144,13 @@ This document explains what Queencoder Pulse does, its key features, and how to 
   - Most recent joined session (for convenience)
   - Student ID for this device
   - “Recent sessions (this device)” history
+  - Saved display-name suggestions for the join form
 
-If you use the app on a shared computer, always use **Log out on this device** when you’re done.
+**Important:** Deleting data in **Firebase Console** (Firestore + Authentication) does **not** erase anything stored in the browser. Old profile text and “recent sessions” can still appear until you clear local data on that device.
+
+Use **Log out on this device** (student or teacher profile) to sign out and remove **all** Queencoder Pulse data from this browser: display name, student ID, active session, join history, and name suggestions.
+
+To fully reset a machine without using the app, use the browser’s **Clear site data / cookies** for your app’s URL (same effect as clearing storage for that origin).
 
 ## Common Troubleshooting
 

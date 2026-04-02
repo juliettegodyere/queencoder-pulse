@@ -1,12 +1,15 @@
 import {
   collection,
   doc,
+  getDocs,
   onSnapshot,
   runTransaction,
   serverTimestamp,
   setDoc,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '../../services/firebase.js';
+import { normalizeStudentId } from '../students/studentService.js';
 import { computeScore } from '../../utils/scoring.js';
 import { secondsSince } from '../../utils/time.js';
 
@@ -20,7 +23,50 @@ export async function joinSessionAsPlayer(sessionId, playerId, displayName, stud
       totalScore: 0,
       correctCount: 0,
       totalAnswers: 0,
+      active: true,
+      leftAt: null,
       joinedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+/**
+ * Same student rejoining after logout gets a new anonymous UID — remove older player rows
+ * for this studentId so the leaderboard does not show duplicates.
+ * Call after linkAuthUserToStudent so rules allow delete for linked student.
+ */
+export async function removeDuplicatePlayersForStudent(sessionId, studentId, keepPlayerId) {
+  const sid = normalizeStudentId(studentId);
+  if (!sid || !sessionId || !keepPlayerId) return;
+
+  // Full scan avoids index requirements and matches legacy rows (`@test` vs `test`).
+  const col = collection(db, 'sessions', sessionId, 'players');
+  const snap = await getDocs(col);
+  const batch = writeBatch(db);
+  let n = 0;
+  snap.docs.forEach((d) => {
+    if (d.id === keepPlayerId) return;
+    const rowSid = normalizeStudentId(d.data()?.studentId || '');
+    if (rowSid === sid) {
+      batch.delete(d.ref);
+      n += 1;
+    }
+  });
+  if (n > 0) {
+    await batch.commit();
+  }
+}
+
+/** Mark this device’s player row inactive before sign-out (logout / leave session). */
+export async function markPlayerInactive(sessionId, playerId) {
+  if (!sessionId || !playerId) return;
+  const ref = doc(db, 'sessions', sessionId, 'players', playerId);
+  await setDoc(
+    ref,
+    {
+      active: false,
+      leftAt: serverTimestamp(),
     },
     { merge: true }
   );

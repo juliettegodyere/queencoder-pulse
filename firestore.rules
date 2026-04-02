@@ -66,7 +66,23 @@ service cloud.firestore {
 
       match /players/{playerId} {
         allow read: if isSignedIn();
-        allow create, update, delete: if isSignedIn() && playerId == request.auth.uid;
+        allow create: if isSignedIn() && playerId == request.auth.uid;
+        allow update: if isSignedIn() && (
+          playerId == request.auth.uid ||
+          isTeacherForSession(sessionId)
+        );
+        // Inactive rows (logged out mid-session) may use a studentId form that no longer
+        // matches the linked profile doc (e.g. legacy "@id" vs normalized "id"). Allow any
+        // signed-in user to delete inactive player docs so rejoin can succeed in the same session.
+        allow delete: if isSignedIn() && (
+          playerId == request.auth.uid ||
+          isTeacherForSession(sessionId) ||
+          (
+            resource.data.studentId != null &&
+            isLinkedStudent(resource.data.studentId)
+          ) ||
+          resource.data.active == false
+        );
       }
 
       match /responses/{responseId} {

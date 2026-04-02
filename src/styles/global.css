@@ -424,6 +424,22 @@ button {
   border: 1px solid rgba(129, 140, 248, 0.35);
 }
 
+.qp-leaderboard__row.is-inactive {
+  opacity: 0.72;
+  background: rgba(100, 116, 139, 0.1);
+}
+
+.qp-leaderboard__row.is-inactive .qp-leaderboard__score {
+  color: var(--qp-muted);
+  font-weight: 600;
+}
+
+.qp-leaderboard__badge {
+  font-weight: 500;
+  color: var(--qp-muted);
+  font-size: 0.8rem;
+}
+
 .qp-leaderboard__rank {
   color: var(--qp-muted);
   font-weight: 600;

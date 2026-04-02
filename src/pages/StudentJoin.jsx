@@ -2,7 +2,10 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { findSessionByJoinCode } from '../features/session/sessionService.js';
-import { joinSessionAsPlayer } from '../features/leaderboard/leaderboardService.js';
+import {
+  joinSessionAsPlayer,
+  removeDuplicatePlayersForStudent,
+} from '../features/leaderboard/leaderboardService.js';
 import { linkAuthUserToStudent, normalizeStudentId } from '../features/students/studentService.js';
 import { Button } from '../components/Button.jsx';
 import { Input } from '../components/Input.jsx';
@@ -17,7 +20,8 @@ import {
 export function StudentJoin() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { playerId, setStudentProfile, authLoading, studentId: storedStudentId } = useAuth();
+  const { playerId, setStudentProfile, authLoading, studentId: storedStudentId, ensureStudentAuth } =
+    useAuth();
   const [code, setCode] = useState(() => searchParams.get('code')?.toUpperCase() || '');
   const [name, setName] = useState('');
   const [studentId, setStudentId] = useState(() => storedStudentId || '');
@@ -30,6 +34,7 @@ export function StudentJoin() {
     setErr(null);
     setBusy(true);
     try {
+      const uid = await ensureStudentAuth();
       const normalizedId = normalizeStudentId(studentId);
       if (!normalizedId) {
         setErr('Enter your student ID.');
@@ -48,11 +53,12 @@ export function StudentJoin() {
       // Link auth user to a persistent student profile.
       await linkAuthUserToStudent({
         studentId: normalizedId,
-        uid: playerId,
+        uid,
         displayName,
       });
 
-      await joinSessionAsPlayer(session.id, playerId, displayName, normalizedId);
+      await removeDuplicatePlayersForStudent(session.id, normalizedId, uid);
+      await joinSessionAsPlayer(session.id, uid, displayName, normalizedId);
       rememberDisplayName(displayName);
       recordStudentSessionEntry({
         sessionId: session.id,
@@ -80,7 +86,7 @@ export function StudentJoin() {
         </Button>
       }
     >
-      {authLoading || !playerId ? (
+      {authLoading ? (
         <p className="qp-muted" style={{ marginTop: 0 }}>
           Signing you in…
         </p>
@@ -127,7 +133,7 @@ export function StudentJoin() {
             ))}
           </datalist>
         </label>
-        <Button type="submit" disabled={busy || !playerId || authLoading}>
+        <Button type="submit" disabled={busy || authLoading}>
           {busy ? 'Joining…' : 'Enter room'}
         </Button>
       </form>

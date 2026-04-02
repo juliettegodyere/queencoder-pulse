@@ -1,6 +1,15 @@
 import { createContext, useCallback, useContext, useMemo, useEffect, useState } from 'react';
-import { GoogleAuthProvider, getIdTokenResult, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  getIdTokenResult,
+  onAuthStateChanged,
+  signInAnonymously,
+  signInWithPopup,
+  signOut,
+} from 'firebase/auth';
 import { auth } from '../services/firebase.js';
+import { clearStudentLocalDeviceData } from '../utils/studentLocalHistory.js';
+import { markPlayerInactive } from '../features/leaderboard/leaderboardService.js';
 
 const AuthContext = createContext(null);
 
@@ -31,14 +40,15 @@ export function AuthProvider({ children }) {
     return () => unsub();
   }, []);
 
-  // Ensure students always have an authenticated identity for rule enforcement.
+  // Only auto-create an anonymous identity when the device already has student context.
+  // This prevents creating anonymous users for casual visitors, while still restoring access
+  // for returning students.
   useEffect(() => {
     if (authLoading) return;
     if (authUser) return;
-    signInAnonymously(auth).catch(() => {
-      // If anonymous auth isn't enabled or popup is blocked, downstream pages will fail with a clear error.
-    });
-  }, [authLoading, authUser]);
+    if (!studentId && !activeSessionId) return;
+    signInAnonymously(auth).catch(() => {});
+  }, [authLoading, authUser, studentId, activeSessionId]);
 
   const refreshAdminFlag = useCallback(async (user) => {
     if (!user) {
@@ -86,8 +96,24 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(STORAGE_ACTIVE_SESSION_ID);
   }, []);
 
+  const ensureStudentAuth = useCallback(async () => {
+    // Reuse any existing Firebase Auth identity (teacher or anonymous).
+    if (auth.currentUser) return auth.currentUser.uid;
+    const result = await signInAnonymously(auth);
+    return result.user.uid;
+  }, []);
+
   const logoutEverywhere = useCallback(async () => {
     try {
+      const uid = auth.currentUser?.uid;
+      const sessionId = activeSessionId;
+      if (sessionId && uid) {
+        try {
+          await markPlayerInactive(sessionId, uid);
+        } catch {
+          // still sign out locally if Firestore write fails
+        }
+      }
       await signOut(auth);
     } catch {
       // ignore sign-out errors; we still clear local state
@@ -100,8 +126,10 @@ export function AuthProvider({ children }) {
       localStorage.removeItem(STORAGE_DISPLAY_NAME);
       localStorage.removeItem(STORAGE_ACTIVE_SESSION_ID);
       localStorage.removeItem(STORAGE_STUDENT_ID);
+      // Join history + name suggestions live in separate keys; clear them on logout.
+      clearStudentLocalDeviceData();
     }
-  }, []);
+  }, [activeSessionId]);
 
   const value = useMemo(
     () => ({
@@ -117,6 +145,7 @@ export function AuthProvider({ children }) {
       signInWithGoogle,
       setStudentProfile,
       clearStudentSession,
+      ensureStudentAuth,
       logoutEverywhere,
     }),
     [
@@ -129,6 +158,7 @@ export function AuthProvider({ children }) {
       signInWithGoogle,
       setStudentProfile,
       clearStudentSession,
+      ensureStudentAuth,
       logoutEverywhere,
     ]
   );

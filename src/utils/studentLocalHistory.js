@@ -1,5 +1,15 @@
 const STORAGE_SESSIONS = 'qp_student_sessions';
 const STORAGE_NAMES = 'qp_display_name_history';
+
+/** Clears join history and display-name suggestions stored on this device only. */
+export function clearStudentLocalDeviceData() {
+  try {
+    localStorage.removeItem(STORAGE_SESSIONS);
+    localStorage.removeItem(STORAGE_NAMES);
+  } catch {
+    // ignore
+  }
+}
 const MAX_SESSIONS = 50;
 const MAX_NAMES = 25;
 

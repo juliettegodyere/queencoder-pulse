@@ -8,8 +8,15 @@ import { db } from '../../services/firebase.js';
 
 const STUDENTS_COLLECTION = 'students';
 
+/**
+ * One canonical form per student so `@test` and `test` map to the same profile and player row.
+ * Trims whitespace and strips a single leading `@` (common handle-style IDs).
+ */
 export function normalizeStudentId(raw) {
-  return String(raw || '').trim();
+  let s = String(raw || '').trim();
+  if (!s) return '';
+  if (s.startsWith('@')) s = s.slice(1).trim();
+  return s;
 }
 
 export async function getStudent(studentId) {
