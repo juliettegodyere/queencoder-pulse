@@ -22,6 +22,27 @@ export async function addQuestion(sessionId, { prompt, choices, correctIndex }) 
   return ref.id;
 }
 
+/**
+ * Add many preset questions. Items are written in reverse order so that, with
+ * orderBy(createdAt, desc), the first preset in the array appears first in the queue.
+ */
+export async function addQuestionPresets(sessionId, presets) {
+  const questionsRef = collection(db, 'sessions', sessionId, 'questions');
+  const ordered = [...presets].reverse();
+  for (const item of ordered) {
+    const prompt = item.topic
+      ? `[${item.topic}]\n\n${item.prompt}`
+      : item.prompt;
+    await addDoc(questionsRef, {
+      prompt: String(prompt).trim(),
+      choices: item.choices,
+      correctIndex: item.correctIndex,
+      state: QUESTION_STATE.DRAFT,
+      createdAt: serverTimestamp(),
+    });
+  }
+}
+
 export function subscribeQuestions(sessionId, onData, onError) {
   const q = query(
     collection(db, 'sessions', sessionId, 'questions'),

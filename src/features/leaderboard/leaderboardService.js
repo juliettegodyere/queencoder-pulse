@@ -154,6 +154,7 @@ export async function submitAnswer({
     let studentPrev = null;
     let prevStudentScore = null;
     let newStudentScore = null;
+    let newStudentTime = 0;
     let updatedThresholds = null;
     let newlyAwardedCount = 0;
 
@@ -167,7 +168,7 @@ export async function submitAnswer({
       prevStudentScore = studentPrev.totalScore || 0;
       newStudentScore = prevStudentScore + points;
       const prevStudentTime = studentPrev.totalResponseTimeSeconds || 0;
-      const newStudentTime = prevStudentTime + responseTimeSeconds;
+      newStudentTime = prevStudentTime + responseTimeSeconds;
 
       const thresholds = [1000, 5000, 10000];
       const existingThresholds = new Set(studentPrev.medalThresholds || []);

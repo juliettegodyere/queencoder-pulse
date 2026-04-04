@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { addQuestion, subscribeQuestions, subscribeResponsesForQuestion } from '../features/quiz/quizService.js';
+import {
+  addQuestion,
+  addQuestionPresets,
+  subscribeQuestions,
+  subscribeResponsesForQuestion,
+} from '../features/quiz/quizService.js';
+import { CURRICULUM_PULSE_QUESTIONS } from '../data/curriculumPulseQuestions.js';
+import { CURRICULUM_PYTHON_QUESTIONS } from '../data/curriculumPythonQuestions.js';
 import {
   endSession,
   publishQuestionToSession,
@@ -60,6 +67,26 @@ export function TeacherDashboard() {
     const rate = total ? Math.round((answered / total) * 100) : 0;
     return { total, answered, rate };
   }, [ranked]);
+
+  const loadPresetPack = async (presets, packLabel) => {
+    if (
+      questions.length > 0 &&
+      !window.confirm(
+        `Your queue already has questions. Add the ${packLabel} pack (15 questions) anyway?`
+      )
+    ) {
+      return;
+    }
+    setFormError(null);
+    setBusy(true);
+    try {
+      await addQuestionPresets(sessionId, presets);
+    } catch (e2) {
+      setFormError(e2?.message || 'Could not add preset questions.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const addQ = async (e) => {
     e.preventDefault();
@@ -233,6 +260,33 @@ export function TeacherDashboard() {
               Save to queue
             </Button>
           </form>
+
+          <div className="qp-card qp-stack" style={{ padding: '1.25rem' }}>
+            <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Curriculum packs</h2>
+            <p className="qp-muted" style={{ margin: 0 }}>
+              Ready-made sets of 15 multiple-choice questions. Each pack is added in teaching
+              order (first topic at the top of the queue). You can load one pack per class or
+              both if you want a mixed session.
+            </p>
+            <div className="qp-row" style={{ flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={busy}
+                onClick={() => loadPresetPack(CURRICULUM_PULSE_QUESTIONS, 'Scratch / Stage 1–2')}
+              >
+                {busy ? 'Adding…' : 'Add Scratch / computational thinking (15)'}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={busy}
+                onClick={() => loadPresetPack(CURRICULUM_PYTHON_QUESTIONS, 'Python intro')}
+              >
+                {busy ? 'Adding…' : 'Add Python intro (15)'}
+              </Button>
+            </div>
+          </div>
 
           <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Queue</h2>
           <ul className="qp-stack" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
