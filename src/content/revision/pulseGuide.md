@@ -8,15 +8,6 @@
 | Stage 2 (Scratch)                      | 9 topics                         |
 | Labels in reports                      | From `[topic]` in preset prompts |
 
-
----
-
-## Why is the session report empty or incomplete?
-
-- Wrong **session** or join code.
-- **No responses** - nothing sent live, or no submissions.
-- **Custom** questions without `[Label]` → **Custom / untagged** in the app until you add a tag.
-
 ---
 
 ## Lecture notes - Stage 1 (computational thinking)
