@@ -581,3 +581,98 @@ button {
   font-size: 0.8rem;
   color: var(--qp-muted);
 }
+
+.qp-revision__h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.qp-revision__h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.qp-revision__table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.qp-revision__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.qp-revision__table th,
+.qp-revision__table td {
+  border: 1px solid var(--qp-border);
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.qp-revision__table thead th {
+  background: var(--qp-bg);
+  font-weight: 600;
+}
+
+.qp-revision__list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.qp-revision-guide {
+  max-width: 52rem;
+}
+
+.qp-revision-guide__h2 {
+  margin: 1.35rem 0 0.65rem;
+  font-size: 1.05rem;
+}
+
+.qp-revision-guide__h2:first-child {
+  margin-top: 0;
+}
+
+.qp-revision-guide__h3 {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.qp-revision-guide__p {
+  margin: 0 0 0.65rem;
+  line-height: 1.5;
+}
+
+.qp-revision-guide__list {
+  margin: 0 0 0.85rem;
+  padding-left: 1.25rem;
+}
+
+.qp-revision-guide__li {
+  margin-bottom: 0.35rem;
+}
+
+.qp-revision-guide__hr {
+  border: none;
+  border-top: 1px solid var(--qp-border);
+  margin: 1.25rem 0;
+}
+
+.qp-revision-guide__code {
+  font-size: 0.88em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--qp-bg);
+  border: 1px solid var(--qp-border);
+}
+
+.qp-revision-guide__table {
+  font-size: 0.88rem;
+}
+
+.qp-revision-guide__strong {
+  font-weight: 600;
+}

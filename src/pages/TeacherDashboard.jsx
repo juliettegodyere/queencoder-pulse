@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   addQuestion,
   addQuestionPresets,
@@ -7,7 +7,9 @@ import {
   subscribeResponsesForQuestion,
 } from '../features/quiz/quizService.js';
 import { CURRICULUM_PULSE_QUESTIONS } from '../data/curriculumPulseQuestions.js';
+import { CURRICULUM_PULSE_QUESTIONS_ROUND2 } from '../data/curriculumPulseQuestionsRound2.js';
 import { CURRICULUM_PYTHON_QUESTIONS } from '../data/curriculumPythonQuestions.js';
+import { CURRICULUM_PYTHON_QUESTIONS_ROUND2 } from '../data/curriculumPythonQuestionsRound2.js';
 import {
   endSession,
   publishQuestionToSession,
@@ -23,6 +25,7 @@ import { Timer } from '../components/Timer.jsx';
 import { useLeaderboard } from '../hooks/useLeaderboard.js';
 import { useSession } from '../hooks/useSession.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { buildRevisionReportMarkdown } from '../features/revision/revisionReportService.js';
 
 const DEFAULT_CHOICES = ['', '', '', ''];
 
@@ -67,6 +70,33 @@ export function TeacherDashboard() {
     const rate = total ? Math.round((answered / total) * 100) : 0;
     return { total, answered, rate };
   }, [ranked]);
+
+  const downloadRevisionReport = async () => {
+    if (!sessionId) return;
+    setFormError(null);
+    setBusy(true);
+    try {
+      const md = await buildRevisionReportMarkdown(sessionId, {
+        sessionTitle: session?.title,
+        joinCode: session?.joinCode,
+      });
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const safe = String(session?.joinCode || sessionId.slice(0, 8)).replace(/[^a-zA-Z0-9-_]/g, '');
+      a.download = `pulse-revision-${safe}.md`;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e2) {
+      setFormError(e2?.message || 'Could not build revision report.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const loadPresetPack = async (presets, packLabel) => {
     if (
@@ -216,6 +246,31 @@ export function TeacherDashboard() {
         {participation.rate}%).
       </p>
 
+      <div className="qp-card qp-stack" style={{ padding: '1.25rem', marginTop: '1rem' }}>
+        <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Automated revision report</h2>
+        <p className="qp-muted" style={{ margin: 0 }}>
+          Open the in-app report to review while you teach, or download a Markdown file from this
+          session’s <strong>questions</strong> and <strong>responses</strong>: topic-level wrong
+          rates (using <code>[Topic]</code> labels from curriculum packs), students over 40% wrong
+          (with 3+ answers), and per-topic names. Merge downloads into{' '}
+          <code>REVISION_NOTES.md</code> or your planner.
+        </p>
+        <div className="qp-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+          <Link to={`/teacher/${sessionId}/revision`} className="qp-btn qp-btn--primary">
+            Open revision report
+          </Link>
+          <Button type="button" variant="ghost" disabled={busy} onClick={downloadRevisionReport}>
+            {busy ? 'Working…' : 'Download revision report (.md)'}
+          </Button>
+        </div>
+        <p className="qp-muted" style={{ margin: '0.75rem 0 0', fontSize: '0.9rem' }}>
+          Syllabus priorities (same layout as the report page):{' '}
+          <Link to="/teacher/revision-notes/pulse">Scratch &amp; Pulse</Link>
+          {' · '}
+          <Link to="/teacher/revision-notes/python">Python intro</Link>
+        </p>
+      </div>
+
       <div className="qp-grid-2" style={{ marginTop: '1.5rem' }}>
         <div className="qp-stack">
           <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Compose question</h2>
@@ -265,17 +320,21 @@ export function TeacherDashboard() {
             <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Curriculum packs</h2>
             <p className="qp-muted" style={{ margin: 0 }}>
               Ready-made sets of 15 multiple-choice questions. Each pack is added in teaching
-              order (first topic at the top of the queue). You can load one pack per class or
-              both if you want a mixed session.
+              order (first topic at the top of the queue). Use <strong>Round 2</strong> after
+              students have already done Round 1. See <code>REVISION_NOTES.md</code> for revision
+              structure.
             </p>
-            <div className="qp-row" style={{ flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <p className="qp-muted" style={{ margin: '0.5rem 0 0', fontSize: '0.9rem' }}>
+              Round 1
+            </p>
+            <div className="qp-row" style={{ flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.35rem' }}>
               <Button
                 type="button"
                 variant="ghost"
                 disabled={busy}
                 onClick={() => loadPresetPack(CURRICULUM_PULSE_QUESTIONS, 'Scratch / Stage 1–2')}
               >
-                {busy ? 'Adding…' : 'Add Scratch / computational thinking (15)'}
+                {busy ? 'Adding…' : 'Scratch / computational thinking (15)'}
               </Button>
               <Button
                 type="button"
@@ -283,7 +342,28 @@ export function TeacherDashboard() {
                 disabled={busy}
                 onClick={() => loadPresetPack(CURRICULUM_PYTHON_QUESTIONS, 'Python intro')}
               >
-                {busy ? 'Adding…' : 'Add Python intro (15)'}
+                {busy ? 'Adding…' : 'Python intro (15)'}
+              </Button>
+            </div>
+            <p className="qp-muted" style={{ margin: '0.75rem 0 0', fontSize: '0.9rem' }}>
+              Round 2 (new questions, same syllabus)
+            </p>
+            <div className="qp-row" style={{ flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.35rem' }}>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={busy}
+                onClick={() => loadPresetPack(CURRICULUM_PULSE_QUESTIONS_ROUND2, 'Scratch Round 2')}
+              >
+                {busy ? 'Adding…' : 'Scratch Round 2 (15)'}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={busy}
+                onClick={() => loadPresetPack(CURRICULUM_PYTHON_QUESTIONS_ROUND2, 'Python Round 2')}
+              >
+                {busy ? 'Adding…' : 'Python Round 2 (15)'}
               </Button>
             </div>
           </div>

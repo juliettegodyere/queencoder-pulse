@@ -4,6 +4,8 @@ import { QuizSession } from '../pages/QuizSession.jsx';
 import { Results } from '../pages/Results.jsx';
 import { StudentJoin } from '../pages/StudentJoin.jsx';
 import { TeacherDashboard } from '../pages/TeacherDashboard.jsx';
+import { SessionRevisionReport } from '../pages/SessionRevisionReport.jsx';
+import { CurriculumRevisionGuide } from '../pages/CurriculumRevisionGuide.jsx';
 import { MyProfile } from '../pages/MyProfile.jsx';
 import { GlobalLeaderboard } from '../pages/GlobalLeaderboard.jsx';
 import { TeacherProfile } from '../pages/TeacherProfile.jsx';
@@ -13,6 +15,8 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/join" element={<StudentJoin />} />
+      <Route path="/teacher/:sessionId/revision" element={<SessionRevisionReport />} />
+      <Route path="/teacher/revision-notes/:track" element={<CurriculumRevisionGuide />} />
       <Route path="/teacher/:sessionId" element={<TeacherDashboard />} />
       <Route path="/teacher/profile" element={<TeacherProfile />} />
       <Route path="/play/:sessionId" element={<QuizSession />} />
